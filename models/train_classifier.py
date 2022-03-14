@@ -1,24 +1,78 @@
 import sys
 
+import re
+import pickle
+import numpy as np
+import pandas as pd
+import sqlalchemy
+from sqlalchemy import create_engine
+
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+from nltk.corpus import stopwords
+from nltk import word_tokenize
+
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.feature_extraction.text import CountVectorizer 
+from sklearn.feature_extraction.text import TfidfTransformer
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.model_selection import GridSearchCV
 
 def load_data(database_filepath):
-    pass
+    engine = create_engine('sqlite:///' + database_filepath)
+    df = pd.read_sql_table(engine.table_names()[0], con=engine)
+    df = df.drop(df[(df['related'] == 2)].index) # temp solution to 'bad data' where 'related' is not binary
+
+    X = df.message
+    y = df.iloc[:, 4:].drop(['child_alone'],axis=1)
+    return X, y, y.columns.tolist()
 
 
 def tokenize(text):
-    pass
+    # Normalize
+    text = re.sub(r"[^A-z0-9]", " ", text.lower())
+    words = word_tokenize(text)
+    # remove stopwords
+    words = [w for w in words if w not in stopwords.words("english")]
+    # Lemmatize
+    lemmatizer = nltk.WordNetLemmatizer()
+    return [lemmatizer.lemmatize(w).strip() for w in words]
 
 
 def build_model():
-    pass
+    pipeline = Pipeline(
+    [
+        ("vect", CountVectorizer()),
+        ("tfidf", TfidfTransformer()),
+        ("clf", MultiOutputClassifier(RandomForestClassifier(class_weight="balanced"), n_jobs=-1)),
+    ])
+
+    parameters = {'clf__estimator__max_depth': [10, 20, None],
+              'clf__estimator__min_samples_leaf': [1, 2, 4],
+              'clf__estimator__n_estimators': [10, 20, 40]}
+
+    cv = GridSearchCV(pipeline, param_grid=parameters, scoring='accuracy', verbose=1, n_jobs=-1)
+
+    return pipeline
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    y_test_pred = model.predict(X_test)
+    print(classification_report(Y_test, y_test_pred, target_names=category_names))
+
+    for  i, category in enumerate(Y_test.columns.values):
+        print("{} -- {}".format(category, accuracy_score(Y_test.values[:,i], y_test_pred[:, i])))
+    print("accuracy = {}".format(accuracy_score(Y_test, y_test_pred)))
 
 
 def save_model(model, model_filepath):
-    pass
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():

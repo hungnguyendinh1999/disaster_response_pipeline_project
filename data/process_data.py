@@ -1,16 +1,51 @@
 import sys
 
+import pandas as pd
+import numpy as np
+import sqlalchemy
+from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
-    pass
+    '''
+    Load 2 datasets: message and Categories
+    Return 2 Dataframes for each
+    '''
+    # load datasets
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath)
+    
+    # merge datasets
+    df = pd.merge(messages, categories, on='id')
+    return df
 
 
 def clean_data(df):
-    pass
+    categories = df.categories.str.split( ';', expand=True)
+    
+    # select the first row of the categories dataframe to be the categories
+    row = categories.iloc[0,:]
+    func = (lambda x: x[:-2])
+    category_colnames = row.apply(func)
+
+    # rename the columns of `categories`
+    categories.columns = category_colnames
+    for column in categories:
+        # set each value to be the last character of the string
+        categories[column] = categories[column].apply(lambda x: x[-1])
+        categories[column] = categories[column].astype(int)
+    
+    # Add the categories
+    df = df.drop(['categories'], axis=1)
+    df = pd.concat([df, categories], axis=1, sort=False)
+    
+    df = df.drop_duplicates(subset='id') # Remove Duplicates
+
+    return df
 
 
 def save_data(df, database_filename):
-    pass  
+    engine = create_engine('sqlite:///' + database_filename)
+    df.to_sql(database_filename[:-3], engine, index=False)
 
 def main():
     if len(sys.argv) == 4:
