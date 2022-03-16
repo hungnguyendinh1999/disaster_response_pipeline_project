@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://d14fo0winaifog.cloudfront.net/plotly-basic.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 
 <body>
@@ -62,6 +62,16 @@
     {% for id in ids %}
         <div id="{{id}}"></div>
     {% endfor %}
+
+    <!-- 
+        WORD CLOUD PLAN
+        Generate 1 word cloud for one of the labels. Save image in 'templates/img or sth'
+        Call it 'wordcloud.png'
+        NEXT, create an interactive "Filter" (36 onClick label buttons) UI
+        THEN, onClick=> get value of button (label) and call generate_wordcloud() to backend
+        FINALLY, backend generate Wordcloud -> returns render_template('wordcloud.html')
+    -->
+    
 </div>
 
 <script type="text/javascript">

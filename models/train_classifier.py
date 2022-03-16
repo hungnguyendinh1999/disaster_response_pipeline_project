@@ -30,7 +30,7 @@ def load_data(database_filepath):
     df = df.drop(df[(df['related'] == 2)].index) # temp solution to 'bad data' where 'related' is not binary
 
     X = df.message
-    y = df.iloc[:, 4:].drop(['child_alone'],axis=1)
+    y = df.iloc[:, 4:]
     return X, y, y.columns.tolist()
 
 

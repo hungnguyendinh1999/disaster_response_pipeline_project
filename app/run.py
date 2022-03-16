@@ -37,35 +37,71 @@ model = joblib.load("../models/classifier.pkl")
 @app.route('/')
 @app.route('/index')
 def index():
+    graphs = []
     
-    # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
-    genre_counts = df.groupby('genre').count()['message']
-    genre_names = list(genre_counts.index)
-    
-    # create visuals
-    # TODO: Below is an example - modify to create your own visuals
-    graphs = [
+    # GRAPH 1: Distribution of Labels
+    label_counts = df.iloc[:, 4:].sum().sort_values(ascending=False)
+    labels = list(label_counts.index)
+
+    graphs.append(
         {
             'data': [
                 Bar(
-                    x=genre_names,
-                    y=genre_counts
+                    x=labels,
+                    y=label_counts
                 )
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Distribution of Message Labels',
                 'yaxis': {
                     'title': "Count"
                 },
                 'xaxis': {
-                    'title': "Genre"
+                    'title': "Labels"
                 }
             }
         }
-    ]
-    
+    )
+
+    # GRAPH 2: Distribution of Labels groupby 'genre'
+    labels_by_genre = df.loc[:, 'genre':].groupby('genre').sum()
+    labels = list(labels_by_genre.iloc[0].index)
+
+    graphs.append(
+        {
+            'data': [
+                Bar(
+                    x=labels,
+                    y=labels_by_genre.iloc[0],
+                    name=labels_by_genre.index[0]
+                ),
+                Bar(
+                    x=labels,
+                    y=labels_by_genre.iloc[1],
+                    name=labels_by_genre.index[1]
+                ),
+                Bar(
+                    x=labels,
+                    y=labels_by_genre.iloc[2],
+                    name=labels_by_genre.index[2]
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Labels by Genre',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Labels"
+                },
+                'barmode': 'stack'
+            }
+        }
+    )
+
+
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
