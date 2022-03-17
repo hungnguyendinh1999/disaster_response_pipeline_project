@@ -45,7 +45,7 @@ def clean_data(df):
 
 def save_data(df, database_filename):
     engine = create_engine('sqlite:///' + database_filename)
-    df.to_sql(database_filename[:-3], engine, index=False)
+    df.to_sql(database_filename[:-3], engine, if_exist='replace', index=False)
 
 def main():
     if len(sys.argv) == 4:
